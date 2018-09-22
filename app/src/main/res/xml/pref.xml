@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<PreferenceScreen
+	xmlns:android="http://schemas.android.com/apk/res/android">
+
+	<PreferenceCategory
+		android:key="pref_General"
+		android:title="Access Point settings"
+		android:summary="General settings">
+
+		<EditTextPreference
+			android:key="pref_udpReceiverHotSpotName"
+			android:title="Receiver SSID"
+			android:summary="Set receiver's SSID"
+			android:defaultValue="@string/default_udpReceiverHotSpotName" />
+
+		<EditTextPreference
+			android:key="pref_networkPasskey"
+			android:title="Receiver password"
+			android:summary="Set password"
+			android:defaultValue="@string/default_networkPasskey" />
+
+	</PreferenceCategory>
+
+	<PreferenceCategory
+		android:key="pref_Model"
+		android:title="Model specific settings"
+		android:summary="Model specific settings">
+
+		<CheckBoxPreference
+			android:key="pref_Mixing_active"
+			android:title="Mixing Active"
+			android:summary="Mixing activated"
+			android:defaultValue="true" />
+
+	</PreferenceCategory>
+
+</PreferenceScreen>

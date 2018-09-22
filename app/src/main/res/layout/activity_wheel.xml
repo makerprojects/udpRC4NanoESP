@@ -1,0 +1,51 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:keepScreenOn="true" >
+
+    <RelativeLayout
+        android:id="@+id/canvasLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentTop="true">
+
+    </RelativeLayout>
+
+    <ImageView
+        android:id="@+id/pikoder_logo"
+        android:contentDescription="@+id/app_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:alpha="0.3"
+        android:paddingBottom="5dp"
+        android:paddingRight="5dp"
+        android:src="@drawable/pikoder_logo"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true" />
+
+    <com.udprc4nanoesp.VerticalSeekBar
+         android:id="@+id/calcVerticalSeekBar"
+         android:layout_width="wrap_content"
+         android:layout_height="match_parent"
+         android:layout_alignParentRight="true"
+         android:fadingEdge="none"
+         android:layout_marginBottom="25dp"
+         android:layout_marginTop="25dp"
+         android:layout_marginRight="20dp"
+         android:progress="0"
+         android:progressDrawable="@layout/progress"
+         android:scrollbarStyle="outsideInset"
+         android:thumb="@layout/progress_t" />
+
+
+    <Button
+        android:id="@+id/btnRear"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="left|center_vertical"
+        android:text="@string/backward"
+        android:layout_marginTop="40dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true" />
+
+</RelativeLayout>
