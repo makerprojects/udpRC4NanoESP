@@ -128,11 +128,7 @@ public class ActivityButtons extends Activity {
 		btn_left = (Button) findViewById(R.id.left);
 		btn_right = (Button) findViewById(R.id.right);
 
-		Globals g = Globals.getInstance();	// load timeout form global variable
-		iTimeOut = g.getData();
-		Log.d(TAG, "Read timeout " + String.valueOf(iTimeOut));
-
-		udpServer = new UdpServer(this,mHandler);
+		udpServer = new UdpServer(this,mHandler,host,remotePort);
 
 		btn_forward.setOnTouchListener(new OnTouchListener() {
 			public boolean onTouch(View v, MotionEvent event) {
@@ -343,11 +339,8 @@ public class ActivityButtons extends Activity {
 			toast.show();
 			return;
 		}
-		String uriString = "udp://" + host + ":" + remotePort + "/";
-		uriString += Uri.encode(commandString);
-		Uri uri = Uri.parse(uriString);
-		UdpSender udpSender = new UdpSender();
-		udpSender.SendTo(uri);
+		// String uriString = "udp://" + host + ":" + remotePort + "/";
+		udpServer.sendCommand(commandString);
 	}
 
 	private void loadPref() {

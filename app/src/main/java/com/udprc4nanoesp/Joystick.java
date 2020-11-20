@@ -19,19 +19,25 @@
 
 package com.udprc4nanoesp;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.net.Uri;
+import android.os.Handler;
 import android.support.v4.view.MotionEventCompat;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
+import static com.udprc4nanoesp.UdpServer.COMMAND_STRING;
 
 public class Joystick extends View {
+
+    // member fields
+    private final Handler mHandler;
 
     // additional specific defs for processing...
     private final static int FINGER_CIRCLE_SIZE = 20;
@@ -72,12 +78,13 @@ public class Joystick extends View {
     boolean mThrottleNeutralize;
     boolean mDirectionReverseFlag;
     boolean mThrottleReverseFlag;
+    Context mContext;
 
-    String mUriString;
+    UdpServer mUdpServer;
 
     private static String TAG = Joystick.class.getSimpleName();
 
-    public Joystick(Context context, int DirectionChannel, int ThrottleChannel, boolean my_mixing, boolean DirectionNeutralize, boolean ThrottleNeutralize, boolean DirectionReverseFlag, boolean ThrottleReverseFlag, String uriString) {
+    public Joystick(Context context, int DirectionChannel, int ThrottleChannel, boolean my_mixing, boolean DirectionNeutralize, boolean ThrottleNeutralize, boolean DirectionReverseFlag, boolean ThrottleReverseFlag, Handler handler) {
         super(context);
 
         mDirectionChannel = DirectionChannel;
@@ -86,8 +93,8 @@ public class Joystick extends View {
         mDirectionReverseFlag = DirectionReverseFlag;
         mThrottleReverseFlag = ThrottleReverseFlag;
         mThrottleNeutralize = ThrottleNeutralize;
-
-        mUriString = uriString;
+        mContext = context;
+        mHandler = handler;
 
         mixing = my_mixing;
         fingerPaint = new Paint();
@@ -318,15 +325,12 @@ public class Joystick extends View {
         } else {
             commandLeft = "FF0" + String.valueOf(mDirectionChannel) + String.format("%X", (byte) motorLeft);
         }
-        mSendCommand("0x" + commandLeft + commandRight);
-    }
-
-    private void mSendCommand(String commandString) {
-        Log.d(TAG, "mSendCommand (URI): " + mUriString);
-        Log.d(TAG, "mSendCommand (Command): " + commandString);
-        Uri uri = Uri.parse(mUriString + Uri.encode(commandString));
-        UdpSender udpSender = new UdpSender();
-        udpSender.SendTo(uri);
+        String CommandString = "0x" + commandLeft + commandRight;
+        Log.d(TAG, "mSendCommand (Command): " + CommandString);
+        Activity activity = (Activity) mContext;
+        if (!activity.isFinishing()) {
+            mHandler.obtainMessage(COMMAND_STRING, CommandString.length(), 0, CommandString).sendToTarget();
+        }
     }
 
 }

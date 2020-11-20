@@ -152,11 +152,7 @@ public class ActivityWheel extends Activity implements SensorEventListener  {
         VSeekBar.setMaximum(pwmMax);
 		btn_Rear = (Button) findViewById(R.id.btnRear);
 
-		Globals g = Globals.getInstance();	// load timeout form global variable
-		iTimeOut = g.getData();
-		Log.d(TAG, "Read timeout " + String.valueOf(iTimeOut));
-
-		udpServer = new UdpServer(this,mHandler);
+		udpServer = new UdpServer(this,mHandler,host,remotePort);
 
 		btn_Rear.setOnTouchListener(new OnTouchListener() {
 			public boolean onTouch(View v, MotionEvent event) {
@@ -394,11 +390,7 @@ public class ActivityWheel extends Activity implements SensorEventListener  {
 			toast.show();
 			return;
 		}
-		String uriString = "udp://" + host + ":" + remotePort + "/";
-		uriString += Uri.encode(commandString);
-		Uri uri = Uri.parse(uriString);
-		UdpSender udpSender = new UdpSender();
-		udpSender.SendTo(uri);
+		udpServer.sendCommand(commandString);
 	}
 
 	private void loadPref(){

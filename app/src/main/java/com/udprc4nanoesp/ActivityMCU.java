@@ -77,12 +77,7 @@ public class ActivityMCU extends Activity {
     	flash_success = (String) getResources().getText(R.string.flash_success);
     	error_get_data = (String) getResources().getText(R.string.error_get_data);
 
-		Globals g = Globals.getInstance();	// load timeout form global variable
-		iTimeOut = g.getData();
-		Log.d(TAG, "Read timeout " + String.valueOf(iTimeOut));
-
-		udpServer = new UdpServer(this,mHandler);
-
+		udpServer = new UdpServer(this,mHandler,host,port);
 
 		cb_AutoOFF.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -122,8 +117,7 @@ public class ActivityMCU extends Activity {
 					DecimalFormat myFormatter = new DecimalFormat("00.0");
 					String output = myFormatter.format(num1);
 					str_to_send += String.valueOf(output.charAt(0)) + String.valueOf(output.charAt(1)) + String.valueOf(output.charAt(3));
-					Globals g = Globals.getInstance();	// store timeout in global variable
-					g.setData(((output.charAt(0) - '0') *100 + (output.charAt(1) - '0') * 10 + (output.charAt(3) - '0'))*100); // convert to millis
+					// convert to millis
 					if (Constants.IS_LOGGABLE) Log.v(TAG, "Send Timeout to MCU" + str_to_send);
 					output = output.replace(',','.');
 					if (output.charAt(0) == '0') output = output.substring(1);
@@ -233,11 +227,7 @@ public class ActivityMCU extends Activity {
 			toast.show();
 			return;
 		}
-		String uriString = "udp://" + host + ":" + port + "/";
-		uriString += Uri.encode(str2sent);
-		Uri uri = Uri.parse(uriString);
-		UdpSender udpSender = new UdpSender();
-		udpSender.SendTo(uri);
+		udpServer.sendCommand(str2sent);
 	}
 
 

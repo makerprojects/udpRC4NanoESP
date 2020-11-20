@@ -160,12 +160,7 @@ public class ActivityAccelerometer extends Activity implements SensorEventListen
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         mAccel = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
-        Globals g = Globals.getInstance();	// load timeout form global variable
-        iTimeOut = g.getData();
-        Log.d(TAG, "Read timeout " + String.valueOf(iTimeOut));
-
-        udpServer = new UdpServer(this,mHandler);
-
+        udpServer = new UdpServer(this,mHandler,host,remotePort);
     }
     
     private static class MyHandler extends Handler {
@@ -473,11 +468,7 @@ public class ActivityAccelerometer extends Activity implements SensorEventListen
             toast.show();
             return;
         }
-        String uriString = "udp://" + host + ":" + remotePort + "/";
-        uriString += Uri.encode(commandString);
-        Uri uri = Uri.parse(uriString);
-        UdpSender udpSender = new UdpSender();
-        udpSender.SendTo(uri);
+        udpServer.sendCommand(commandString);
     }
 
     private void loadPref(){

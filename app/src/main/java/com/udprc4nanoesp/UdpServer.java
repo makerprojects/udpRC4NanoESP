@@ -20,6 +20,7 @@
 package com.udprc4nanoesp;
 
 import android.content.Context;
+import android.net.Uri;
 import android.net.wifi.ScanResult;
 import android.net.wifi.SupplicantState;
 import android.net.wifi.WifiConfiguration;
@@ -31,7 +32,16 @@ import android.os.SystemClock;
 import android.text.format.Formatter;
 import android.util.Log;
 
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.List;
+
+import static com.udprc4nanoesp.HexHelper.bytesToHex;
+import static com.udprc4nanoesp.HexHelper.hexStringToBytes;
 
 /**
  * This class does all the work for setting up and managing udp
@@ -41,6 +51,7 @@ import java.util.List;
  */
 
 public class UdpServer {
+
     // Debugging
     public static String TAG = UdpServer.class.getSimpleName();  // used in other modules to indicate bluetooth error conditions
     private static final boolean D = true;
@@ -52,6 +63,8 @@ public class UdpServer {
     private int mState;
     Context mContext;
     private int iTimeOut = 50; // max. number of loops for receiving the ip address
+    private String uriString;
+    private String lastCommand;
 
     // Constants that indicate the current connection state
     public static final int STATE_NONE = 0;       // existence of AP not verified yet
@@ -73,18 +86,20 @@ public class UdpServer {
     public final static int WIFI_HOTSPOT_NOT_FOUND = 7;      // hotspot not found in list of paired devices
     public final static int WIFI_HOTSPOT_CONNECTING = 8;      // hotspot not found in list of paired devices
     public final static int WIFI_HOTSPOT_CONNECTED = 9;      // hotspot not found in list of paired devices
+    public final static int COMMAND_STRING = 12;
 
     /**
      * Constructor. Prepares a new hotspot connection to receiver
      *
      * @param handler A Handler to send messages back to the UI Activity
      */
-    public UdpServer(Context mContext, Handler handler) {
+    public UdpServer(Context mContext, Handler handler, String host, String remotePort) {
         this.mContext = mContext;
         mState = STATE_NONE;
         mHandler = handler;
+        uriString = "udp://" + host + ":" + remotePort + "/";
+        lastCommand = new String("FF007FFF017F"); // init string appropriately to avoid last command zero ptr
     }
-
 
     /*
      * Set the current state of the chat connection
@@ -299,4 +314,95 @@ public class UdpServer {
         // Send a failure message back to the Activity
 		mHandler.sendEmptyMessage(WIFI_SOCKET_FAILED);
     }
+
+    public String sendCommand(final String commandString) {
+        String muriString = uriString + Uri.encode(commandString);
+        Uri uri = Uri.parse(muriString);
+        SendTo(uri);
+        lastCommand = commandString;
+        return commandString;
+    }
+
+    public String sendLastCommand() {
+        String muriString = uriString + Uri.encode(lastCommand);
+        Uri uri = Uri.parse(muriString);
+        SendTo(uri);
+        return lastCommand;
+    }
+
+    private synchronized void SendTo(final Uri uri) {
+        if (uri == null) return;
+        String msg = Uri.decode(uri.getLastPathSegment());
+        if(msg == null) return;
+        byte[] msgBytes = msg.getBytes();
+        if (msg.startsWith("\\0x")) {
+            msg = msg.replace("\\0x", "0x");
+            msgBytes = msg.getBytes();
+        } else if (msg.startsWith("0x")) {
+            msg = msg.replace("0x", "");
+            if(!msg.matches("[a-fA-F0-9]+")) {
+                return;
+            }
+            msgBytes = hexStringToBytes(msg);
+        }
+
+        final byte[] buf = msgBytes;
+
+        if(Constants.IS_LOGGABLE) {
+            Log.d(TAG, "Starting SendTo...");
+            Log.d(TAG, new String(msgBytes));
+            Log.d(TAG, "0x" + bytesToHex(msgBytes));
+        }
+
+        new Thread(new Runnable() {
+            public void run() {
+                try {
+                    InetAddress serverAddress = InetAddress.getByName(uri
+                            .getHost());
+                    //Log.v(getString(R.string.app_name), serverAddress.getHostAddress());
+                    DatagramSocket socket = new DatagramSocket(); // recast with port number as parameter to ensure static assignment
+                    if (!socket.getBroadcast()) socket.setBroadcast(true);
+                    DatagramPacket packet = new DatagramPacket(buf, buf.length,
+                            serverAddress, uri.getPort());
+                    socket.send(packet);
+                    socket.close();
+                } catch (final UnknownHostException e) {
+                    /*toastHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(context, e.toString(),
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    }); */
+                    e.printStackTrace();
+                } catch (final SocketException e) {
+                    /* toastHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(context, e.toString(),
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    }); */
+                    e.printStackTrace();
+                } catch (final IOException e) {
+                     /* toastHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(context, e.toString(),
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    }); */
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
+    private synchronized void SendTo(final Context context, final Uri uri) {
+        SendTo(uri);
+    }
+
+
+
+
 }

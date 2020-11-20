@@ -51,10 +51,6 @@ public class MainActivity extends Activity implements OnClickListener {
 
 		new ActivityEula(this).show();
 
-		// init timeout...
-		Globals g = Globals.getInstance();
-		g.setData(0);
-
 		btnActAccelerometer = (Button) findViewById(R.id.button_accel);
 	    btnActAccelerometer.setOnClickListener(this);
 	    

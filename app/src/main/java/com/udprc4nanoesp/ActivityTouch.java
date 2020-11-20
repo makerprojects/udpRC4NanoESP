@@ -141,18 +141,13 @@ public class ActivityTouch extends Activity {
 		cLeftHeader = "FF0" + String.valueOf(Integer.valueOf(DirectionRXChannel) -1);
 
 		RelativeLayout canvasLayout = (RelativeLayout) findViewById(R.id.canvasLayout);
-		vStickLeft = new Joystick(this, 0, 1, mixing, true, true, false, false, uriString);
+		vStickLeft = new Joystick(this, 0, 1, mixing, true, true, false, false, mHandler);
 		canvasLayout.addView(vStickLeft);
 
-		Globals g = Globals.getInstance();	// load timeout form global variable
-		iTimeOut = g.getData();
-		Log.d(TAG, "Read timeout " + String.valueOf(iTimeOut));
-
-		udpServer = new UdpServer(this,mHandler);
-
+		udpServer = new UdpServer(this, mHandler, host, remotePort);
 	}
 
-	private static class MyHandler extends Handler {
+	private class MyHandler extends Handler {
 		private final WeakReference<ActivityTouch> mActivity;
 
 		public MyHandler(ActivityTouch activity) {
@@ -165,7 +160,7 @@ public class ActivityTouch extends Activity {
 			ActivityTouch activity = mActivity.get();
 			if (activity != null) {
 				switch (msg.what) {
-					case UdpServer.RECEIVE_MESSAGE:								// if message is received
+					case UdpServer.RECEIVE_MESSAGE:								// uplink from receiver
 						String strIncom = (String) msg.obj;
 						Log.d(TAG, "Received: " + strIncom );
 						if (strIncom.equals("?")) { // received '?' as errormessage
@@ -184,6 +179,11 @@ public class ActivityTouch extends Activity {
 							}
 						}
 						break;
+                    case UdpServer.COMMAND_STRING:								// if message is received
+                        strIncom = (String) msg.obj;
+                        Log.d(TAG, "Received: " + strIncom + " Will tranmit" );
+                        udpServer.sendCommand(strIncom);
+                        break;
 					case UdpServer.WIFI_NOT_AVAILABLE:
 						Log.d(UdpServer.TAG, "Wifi not available (Android system setting). Exit");
 						Toast.makeText(activity.getBaseContext(), "Wifi not available (Android system setting). Exit", Toast.LENGTH_LONG).show();
@@ -539,17 +539,7 @@ public class ActivityTouch extends Activity {
 	}
 
 	private void sentCommand(String commandString) {
-		if (!remotePort.matches("^(6553[0-5]|655[0-2]\\d|65[0-4]\\d\\d|6[0-4]\\d{3}|[1-5]\\d{4}|[1-9]\\d{0,3}|0)$")) {
-			CharSequence text = "Error: Invalid Port Number";
-			Toast toast = Toast.makeText(getBaseContext(), text, Toast.LENGTH_SHORT);
-			toast.show();
-			return;
-		}
-		String uriString = "udp://" + host + ":" + remotePort + "/";
-		uriString += Uri.encode(commandString);
-		Uri uri = Uri.parse(uriString);
-		UdpSender udpSender = new UdpSender();
-		udpSender.SendTo(uri);
+		udpServer.sendCommand(commandString);
 	}
 
     private void loadPref(){
